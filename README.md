@@ -92,7 +92,7 @@ The system separates language understanding from workflow correctness.
                          ▼                         ▼
                  ┌─────────────────┐    ┌──────────────────────┐
                  │ Ask the user    │    │ Completeness +       │
-                 │ for information │    │ Validation            │
+                 │ for information │    │ Validation           │
                  └────────┬────────┘    └──────────┬───────────┘
                           │                        │
                           └──────► User ◄─────────┘
