@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+*.db
+.DS_Store
+
+digitomics_conversational_workflow_builder.egg-info/
+
+digitomics_conversational_workflow_builder.egg-info/

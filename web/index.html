@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Workflow Builder</title>
+
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --border: #e5e7eb;
+      --text: #172033;
+      --muted: #667085;
+      --primary: #3157d5;
+      --primary-soft: #eef2ff;
+      --success: #16855b;
+      --success-soft: #eaf8f1;
+      --user: #3157d5;
+      --assistant: #f1f4f8;
+      --shadow: 0 12px 40px rgba(16, 24, 40, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+
+    .header {
+      height: 68px;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-text p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    /* Main */
+
+    .main {
+      width: min(1380px, calc(100% - 48px));
+      margin: 28px auto;
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(380px, 0.9fr);
+      gap: 24px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .panel-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    /* Conversation */
+
+    .conversation {
+      display: flex;
+      flex-direction: column;
+      min-height: 650px;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      min-height: 480px;
+      max-height: 650px;
+    }
+
+    .empty-state {
+      margin: auto;
+      max-width: 420px;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .empty-icon {
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 16px;
+      border-radius: 16px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .empty-state h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .empty-state p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .message-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-width: 78%;
+    }
+
+    .message-row.user {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .message-row.assistant {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .message-label {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 0 4px;
+      font-weight: 600;
+    }
+
+    .message {
+      padding: 12px 15px;
+      border-radius: 14px;
+      line-height: 1.5;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message-row.user .message {
+      background: var(--user);
+      color: white;
+      border-bottom-right-radius: 5px;
+    }
+
+    .message-row.assistant .message {
+      background: var(--assistant);
+      color: var(--text);
+      border-bottom-left-radius: 5px;
+    }
+
+    /* Composer */
+
+    .composer {
+      border-top: 1px solid var(--border);
+      padding: 16px;
+      background: var(--surface-soft);
+    }
+
+    .composer-form {
+      display: flex;
+      gap: 10px;
+    }
+
+    .composer-input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 12px;
+      padding: 13px 15px;
+      outline: none;
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .composer-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    .send-button {
+      border: 0;
+      border-radius: 12px;
+      padding: 0 20px;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.15s;
+    }
+
+    .send-button:hover {
+      opacity: 0.92;
+    }
+
+    .send-button:active {
+      transform: translateY(1px);
+    }
+
+    .send-button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    /* Workflow */
+
+    .workflow-panel {
+      min-height: 650px;
+    }
+
+    .workflow-content {
+      padding: 22px;
+      min-height: 580px;
+    }
+
+    .workflow-empty {
+      min-height: 520px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .workflow-empty-inner {
+      max-width: 300px;
+    }
+
+    .workflow-empty-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 14px;
+      border: 1px dashed #b9c1d0;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #7b8495;
+      font-size: 20px;
+    }
+
+    .workflow-empty h3 {
+      margin: 0 0 7px;
+      font-size: 15px;
+    }
+
+    .workflow-empty p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .workflow-ready {
+      display: none;
+    }
+
+    .workflow-ready.visible {
+      display: block;
+    }
+
+    .workflow-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--success-soft);
+      color: var(--success);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 22px;
+    }
+
+    .workflow-type-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--success);
+      border-radius: 50%;
+    }
+
+    .workflow-name {
+      margin: 0 0 24px;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    /* Workflow nodes */
+
+    .graph {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .node {
+      width: min(100%, 330px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: white;
+      box-shadow: 0 5px 16px rgba(16, 24, 40, 0.05);
+    }
+
+    .node-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .node-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .node-title {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .node-value {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      padding-left: 40px;
+    }
+
+    .connector {
+      width: 1px;
+      height: 24px;
+      background: #cbd2df;
+      position: relative;
+    }
+
+    .connector::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: -3px;
+      border-left: 3px solid transparent;
+      border-right: 3px solid transparent;
+      border-top: 5px solid #cbd2df;
+    }
+
+    /* JSON */
+
+    .json-section {
+      margin-top: 28px;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+    }
+
+    .json-toggle {
+      width: 100%;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .json-toggle span:last-child {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .json-container {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .json-container.visible {
+      display: block;
+    }
+
+    pre {
+      margin: 0;
+      background: #111827;
+      color: #dbe4f0;
+      border-radius: 12px;
+      padding: 15px;
+      overflow: auto;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    /* Loading */
+
+    .typing {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .typing span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #8b95a7;
+      animation: bounce 1s infinite ease-in-out;
+    }
+
+    .typing span:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .typing span:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes bounce {
+      0%, 60%, 100% {
+        transform: translateY(0);
+      }
+      30% {
+        transform: translateY(-4px);
+      }
+    }
+
+    /* Responsive */
+
+    @media (max-width: 900px) {
+      .main {
+        grid-template-columns: 1fr;
+        width: min(720px, calc(100% - 28px));
+      }
+
+      .workflow-panel {
+        min-height: auto;
+      }
+
+      .workflow-content {
+        min-height: auto;
+      }
+
+      .workflow-empty {
+        min-height: 280px;
+      }
+
+      .header {
+        padding: 0 18px;
+      }
+
+      .status {
+        display: none;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .main {
+        margin: 14px auto;
+      }
+
+      .message-row {
+        max-width: 90%;
+      }
+
+      .panel-header {
+        padding: 16px;
+      }
+
+      .messages {
+        padding: 16px;
+      }
+
+      .composer {
+        padding: 12px;
+      }
+
+      .send-button {
+        padding: 0 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">W</div>
+
+        <div class="brand-text">
+          <h1>Conversational Workflow Builder</h1>
+          <p>Turn natural language into structured automations</p>
+        </div>
+      </div>
+
+      <div class="status">
+        <span class="status-dot"></span>
+        Builder ready
+      </div>
+    </header>
+
+    <main class="main">
+
+      <!-- Conversation -->
+
+      <section class="panel conversation">
+
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Conversation</h2>
+            <p class="panel-subtitle">
+              Describe what you want to automate
+            </p>
+          </div>
+        </div>
+
+        <div id="messages" class="messages">
+
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon">✦</div>
+
+            <h2>What would you like to automate?</h2>
+
+            <p>
+              Describe your workflow naturally. I'll identify the required
+              information and ask for anything that's missing.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="composer">
+          <form id="form" class="composer-form">
+
+            <input
+              id="input"
+              class="composer-input"
+              autocomplete="off"
+              placeholder="e.g. Every Monday at 9 AM, send the sales report to #sales"
+            />
+
+            <button
+              id="sendButton"
+              class="send-button"
+              type="submit"
+            >
+              Send
+            </button>
+
+          </form>
+        </div>
+
+      </section>
+
+      <!-- Workflow -->
+
+      <section class="panel workflow-panel">
+
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Workflow</h2>
+            <p class="panel-subtitle">
+              Structured representation of your automation
+            </p>
+          </div>
+        </div>
+
+        <div class="workflow-content">
+
+          <div id="workflowEmpty" class="workflow-empty">
+
+            <div class="workflow-empty-inner">
+
+              <div class="workflow-empty-icon">
+                →
+              </div>
+
+              <h3>Your workflow will appear here</h3>
+
+              <p>
+                Complete the required information and the builder
+                will generate a structured workflow automatically.
+              </p>
+
+            </div>
+
+          </div>
+
+          <div id="workflowReady" class="workflow-ready">
+
+            <div class="workflow-type">
+              <span class="workflow-type-dot"></span>
+              Workflow ready
+            </div>
+
+            <h2 id="workflowName" class="workflow-name">
+              Workflow
+            </h2>
+
+            <div id="graph" class="graph"></div>
+
+            <div class="json-section">
+
+              <button
+                id="jsonToggle"
+                class="json-toggle"
+                type="button"
+              >
+                <span>View workflow JSON</span>
+                <span id="jsonToggleText">Show</span>
+              </button>
+
+              <div id="jsonContainer" class="json-container">
+                <pre id="workflowJson"></pre>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    let sessionId = null;
+
+    const messages = document.getElementById("messages");
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
+    const sendButton = document.getElementById("sendButton");
+    const emptyState = document.getElementById("emptyState");
+
+    const workflowEmpty = document.getElementById("workflowEmpty");
+    const workflowReady = document.getElementById("workflowReady");
+    const workflowName = document.getElementById("workflowName");
+    const graph = document.getElementById("graph");
+    const workflowJson = document.getElementById("workflowJson");
+
+    const jsonToggle = document.getElementById("jsonToggle");
+    const jsonContainer = document.getElementById("jsonContainer");
+    const jsonToggleText = document.getElementById("jsonToggleText");
+
+    function addMessage(text, role) {
+      emptyState.style.display = "none";
+
+      const row = document.createElement("div");
+      row.className = "message-row " + role;
+
+      const label = document.createElement("div");
+      label.className = "message-label";
+      label.textContent = role === "user" ? "You" : "Assistant";
+
+      const bubble = document.createElement("div");
+      bubble.className = "message";
+      bubble.textContent = text;
+
+      row.appendChild(label);
+      row.appendChild(bubble);
+
+      messages.appendChild(row);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function addTypingMessage() {
+      const row = document.createElement("div");
+      row.className = "message-row assistant";
+      row.id = "typingMessage";
+
+      const label = document.createElement("div");
+      label.className = "message-label";
+      label.textContent = "Assistant";
+
+      const bubble = document.createElement("div");
+      bubble.className = "message";
+
+      bubble.innerHTML = `
+        <span class="typing">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      `;
+
+      row.appendChild(label);
+      row.appendChild(bubble);
+
+      messages.appendChild(row);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function removeTypingMessage() {
+      const typing = document.getElementById("typingMessage");
+
+      if (typing) {
+        typing.remove();
+      }
+    }
+
+    function getNodeTitle(node) {
+      if (node.id === "schedule") {
+        return "Schedule";
+      }
+
+      if (node.id === "trigger") {
+        return "Trigger";
+      }
+
+      if (node.id === "filter") {
+        return "Condition";
+      }
+
+      if (node.id === "action") {
+        return "Action";
+      }
+
+      if (node.id === "notify") {
+        return "Destination";
+      }
+
+      return node.id;
+    }
+
+    function getNodeValue(node) {
+      if (node.schedule) {
+        return node.schedule;
+      }
+
+      if (node.description) {
+        return node.description;
+      }
+
+      if (node.recipient) {
+        return node.recipient;
+      }
+
+      if (node.location) {
+        return node.location;
+      }
+
+      if (node.expression) {
+        return JSON.stringify(node.expression);
+      }
+
+      if (node.database && node.table) {
+        return `${node.database} → ${node.table}`;
+      }
+
+      if (node.event) {
+        return node.event;
+      }
+
+      return node.type;
+    }
+
+    function renderWorkflow(workflow) {
+      workflowEmpty.style.display = "none";
+      workflowReady.classList.add("visible");
+
+      workflowName.textContent =
+        workflow.name || "Generated workflow";
+
+      graph.innerHTML = "";
+
+      const nodes = workflow.nodes || [];
+
+      nodes.forEach((node, index) => {
+        const nodeElement = document.createElement("div");
+        nodeElement.className = "node";
+
+        nodeElement.innerHTML = `
+          <div class="node-header">
+            <div class="node-icon">${index + 1}</div>
+            <div class="node-title">
+              ${escapeHtml(getNodeTitle(node))}
+            </div>
+          </div>
+
+          <div class="node-value">
+            ${escapeHtml(getNodeValue(node))}
+          </div>
+        `;
+
+        graph.appendChild(nodeElement);
+
+        if (index < nodes.length - 1) {
+          const connector = document.createElement("div");
+          connector.className = "connector";
+          graph.appendChild(connector);
+        }
+      });
+
+      workflowJson.textContent =
+        JSON.stringify(workflow, null, 2);
+
+      jsonContainer.classList.remove("visible");
+      jsonToggleText.textContent = "Show";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    jsonToggle.addEventListener("click", () => {
+      const visible =
+        jsonContainer.classList.toggle("visible");
+
+      jsonToggleText.textContent =
+        visible ? "Hide" : "Show";
+    });
+
+    async function init() {
+      try {
+        const response = await fetch(
+          "/api/sessions",
+          {
+            method: "POST"
+          }
+        );
+
+        const session = await response.json();
+        sessionId = session.session_id;
+
+      } catch (error) {
+        console.error("Failed to create session", error);
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const text = input.value.trim();
+
+      if (!text || !sessionId) {
+        return;
+      }
+
+      input.value = "";
+      input.disabled = true;
+      sendButton.disabled = true;
+
+      addMessage(text, "user");
+      addTypingMessage();
+
+      try {
+        const response = await fetch(
+          "/api/chat",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              session_id: sessionId,
+              message: text
+            })
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Request failed: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+
+        removeTypingMessage();
+
+        addMessage(data.reply, "assistant");
+
+        if (data.workflow) {
+          renderWorkflow(data.workflow);
+        }
+
+      } catch (error) {
+        removeTypingMessage();
+
+        addMessage(
+          "Something went wrong while processing the request. Please try again.",
+          "assistant"
+        );
+
+        console.error(error);
+
+      } finally {
+        input.disabled = false;
+        sendButton.disabled = false;
+        input.focus();
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>
